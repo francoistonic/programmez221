@@ -1,0 +1,273 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf400
+{\fonttbl\f0\fnil\fcharset0 Consolas;\f1\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;\red43\green145\blue175;\red128\green128\blue128;\red0\green0\blue255;
+\red111\green0\blue138;\red0\green128\blue0;\red163\green21\blue21;\red0\green128\blue128;}
+{\*\expandedcolortbl;;\csgenericrgb\c16863\c56863\c68627;\csgenericrgb\c50196\c50196\c50196;\csgenericrgb\c0\c0\c100000;
+\csgenericrgb\c43529\c0\c54118;\csgenericrgb\c0\c50196\c0;\csgenericrgb\c63922\c8235\c8235;\csgenericrgb\c0\c50196\c50196;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\deftab708
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f0\fs19 \cf2 UINT\cf0  AutomateThread(\cf2 LPVOID\cf0  \cf3 pParam\cf0 )\
+\{\
+	\cf2 CString\cf0  strLog;\
+	\cf4 try\cf0 \
+	\{\
+		CoInitialize(\cf5 NULL\cf0 );\
+\
+		\cf6 // Add specific code here\
+\pard\pardeftab708\ri-340\partightenfactor0
+\cf0 \
+		\cf4 while\cf0  (\cf5 TRUE\cf0 )\
+		\{\
+			\cf4 if\cf0  (_Module.m_bStop)\
+			\{\
+				\cf4 break\cf0 ;\
+			\}\
+			Sleep(200);\
+\
+		\} \cf6 // Main loop\cf0 \
+\
+	\}\
+	\cf4 catch\cf0  (...)\
+	\{\
+		strLog.Format(\cf5 _T\cf0 (\cf7 "EXCEPTION: Arr\'eat du service"\cf0 ));\
+		\cf6 //_Module.LogEvent(strLog);\cf0 \
+	\}\
+\
+	CoUninitialize();\
+	\cf4 return\cf0  0;\
+\}\
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f1\fs22 \cf0 \
+\
+\
+\
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f0\fs19 \cf2 TheServer\cf0 ::TheServer(std::\cf2 wstring\cf0  \cf3 url\cf0 ) : m_listener(\cf3 url\cf0 )\
+\{\
+	std::\cf2 function\cf0 <\cf4 void\cf0 (\cf2 http_request\cf0 )> fnGet = &\cf2 TheServer\cf0 ::handle_get;\
+	m_listener.support(\cf2 methods\cf0 ::GET, fnGet);\
+	std::\cf2 function\cf0 <\cf4 void\cf0 (\cf2 http_request\cf0 )> fnPost = &\cf2 TheServer\cf0 ::handle_post;\
+	m_listener.support(\cf2 methods\cf0 ::POST, fnPost);\
+	std::\cf2 function\cf0 <\cf4 void\cf0 (\cf2 http_request\cf0 )> fnDel = &\cf2 TheServer\cf0 ::handle_del;\
+	m_listener.support(\cf2 methods\cf0 ::DEL, fnDel);\
+	std::\cf2 function\cf0 <\cf4 void\cf0 (\cf2 http_request\cf0 )> fnPut = &\cf2 TheServer\cf0 ::handle_put;\
+	m_listener.support(\cf2 methods\cf0 ::PUT, fnPut);\
+\
+	\cf4 this\cf0 ->_url \cf8 =\cf0  \cf3 url\cf0 ;\
+\}
+\f1\fs22 \
+\
+\
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f0\fs19 \cf4 \
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f1\fs22 \cf0 \
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f0\fs19 \cf2 DWORD\cf0  AutomateThread(\cf2 LPVOID\cf0  \cf3 pParam\cf0 )\
+\{\
+	\cf2 CString\cf0  strLog;\
+	\cf4 try\cf0 \
+	\{\
+		CoInitialize(\cf5 NULL\cf0 );\
+\
+		std::\cf2 wstring\cf0  port = \cf2 Constants\cf0 ::MasterNodePort;\
+		std::\cf2 wstring\cf0  ip = \cf2 ServerHelper\cf0 ::GetIP();\
+		std::\cf2 wstring\cf0  url = \cf2 ServerHelper\cf0 ::BuildURL(ip, port);\
+		http::\cf2 uri\cf0  uri = http::\cf2 uri\cf0 (url);\
+		std::\cf2 wstring\cf0  address = uri.to_string();\
+		std::\cf2 wstring\cf0  name = \cf5 _T\cf0 (\cf7 "Master"\cf0 );\
+\
+		\cf2 TCHAR\cf0  sz[255];\
+		\cf5 _stprintf_s\cf0 (sz, \cf5 _T\cf0 (\cf7 "Node_%s_%s.log"\cf0 ), port.c_str(), name.c_str());\
+		g_Logger.Init(sz);\
+		g_Logger.WriteLog(\cf5 _T\cf0 (\cf7 "Init Node..."\cf0 ));\
+\
+		\cf6 //\cf0 \
+		\cf6 // Create the server node instance\cf0 \
+		\cf6 //\cf0 \
+\
+		\cf5 _stprintf_s\cf0 (sz, \cf5 _T\cf0 (\cf7 "IP : %s"\cf0 ), ip.c_str());\
+		g_Logger.WriteLog(sz);\
+\
+		\cf2 TheServer\cf0  client(address);\
+		client._server \cf8 =\cf0  ip;\
+		client._port \cf8 =\cf0  port;\
+		client._name \cf8 =\cf0  name;\
+		client.Init();\
+		\cf5 _stprintf_s\cf0 (sz, \cf5 _T\cf0 (\cf7 "Worker node %s"\cf0 ), address.c_str());\
+		g_Logger.WriteLog(sz);\
+\
+		\cf4 while\cf0  (\cf5 TRUE\cf0 )\
+		// \'85\{\
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f1\fs22 \cf0 \
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f0\fs19 \cf4 \
+\
+void\cf0  \cf2 TheServer\cf0 ::handle_get(\cf2 http_request\cf0  \cf3 message\cf0 )\
+\{\
+	g_Logger.WriteLog(\cf5 _T\cf0 (\cf7 "handle_get"\cf0 ));\
+\
+	PrintRequest(\cf3 message\cf0 );\
+\
+	\cf6 // http://192.168.175.241:7001/MyServer/LMDB/?request=set-data&key=toto0&value=toto1&name=cache2\cf0 \
+	\cf6 // http://192.168.175.241:7001/MyServer/LMDB/?request=get-data&key=toto2_k&name=cache3\cf0 \
+\
+	std::\cf2 wstring\cf0  request = \cf2 ServerHelper\cf0 ::FindParameter(\cf3 message\cf0 , \cf5 _T\cf0 (\cf7 "request"\cf0 ));\
+\
+	\cf4 if\cf0  (request \cf8 ==\cf0  \cf2 Constants\cf0 ::VerbPing)\
+	\{\
+		RequestVerbPing(\cf3 message\cf0 );\
+		\cf4 return\cf0 ;\
+	\}\
+\
+	\cf4 if\cf0  (request \cf8 ==\cf0  \cf2 Constants\cf0 ::VerbGetData)\
+	\{\
+		RequestVerbGetData(\cf3 message\cf0 );\
+		\cf4 return\cf0 ;\
+	\}\
+\
+	\cf4 if\cf0  (request \cf8 ==\cf0  \cf2 Constants\cf0 ::VerbSetData)\
+	\{\
+		RequestVerbSetData(\cf3 message\cf0 );\
+		\cf4 return\cf0 ;\
+	\}\
+\
+	\cf3 message\cf0 .reply(\cf2 status_codes\cf0 ::OK);\
+\}\
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f1\fs22 \cf0 \
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f0\fs19 \cf0 \
+\
+std::\cf2 wstring\cf0  \cf2 ServerHelper\cf0 ::FindParameterInQuery(std::\cf2 map\cf0 <std::\cf2 wstring\cf0 , std::\cf2 wstring\cf0 >\cf3 query\cf0 , std::\cf2 wstring\cf0  \cf3 var\cf0 )\
+\{\
+	\cf4 auto\cf0  it = \cf3 query\cf0 .find(\cf3 var\cf0 );\
+	std::\cf2 wstring\cf0  value;\
+	\cf4 if\cf0  (it \cf8 !=\cf0  \cf3 query\cf0 .end())\
+	\{\
+		value \cf8 =\cf0  it\cf8 ->\cf0 second;\
+		std::wcout \cf8 <<\cf0  \cf5 _T\cf0 (\cf7 "Extracted param "\cf0 ) \cf8 <<\cf0  \cf3 var\cf0  \cf8 <<\cf0  \cf5 _T\cf0 (\cf7 ": "\cf0 ) \cf8 <<\cf0  value \cf8 <<\cf0  std::endl;\
+	\}\
+	\cf4 return\cf0  value;\
+\}\
+\
+std::\cf2 wstring\cf0  \cf2 ServerHelper\cf0 ::FindParameter(\cf2 http_request\cf0  \cf3 message\cf0 , std::\cf2 wstring\cf0  \cf3 var\cf0 )\
+\{\
+	\cf4 auto\cf0  query = \cf2 uri\cf0 ::split_query(\cf2 uri\cf0 ::decode(\cf3 message\cf0 .relative_uri().query()));\
+	std::\cf2 wstring\cf0  value = \cf2 ServerHelper\cf0 ::FindParameterInQuery(query, \cf3 var\cf0 );\
+	\cf4 return\cf0  value;\
+\}\
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f1\fs22 \cf0 \
+\
+\
+\
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f0\fs19 \cf4 void\cf0  \cf2 TheServer\cf0 ::RequestVerbGetData(\cf2 http_request\cf0  \cf3 message\cf0 )\
+\{\
+	\cf5 USES_CONVERSION\cf0 ;\
+	\cf2 CLMDBWrapper\cf0  lmdb;\
+\
+	g_Logger.WriteLog(\cf2 Constants\cf0 ::VerbGetData.c_str());\
+\
+	std::\cf2 wstring\cf0  key = \cf2 ServerHelper\cf0 ::FindParameter(\cf3 message\cf0 , \cf5 _T\cf0 (\cf7 "key"\cf0 ));\
+	std::\cf2 wstring\cf0  dbNameW = \cf2 ServerHelper\cf0 ::FindParameter(\cf3 message\cf0 , \cf5 _T\cf0 (\cf7 "name"\cf0 ));\
+	std::\cf2 string\cf0  dbName(dbNameW.begin(), dbNameW.end());\
+\
+	\cf4 if\cf0  (lmdb.Init((\cf2 LPSTR\cf0 )dbName.c_str()) == \cf4 false\cf0 )\
+	\{\
+		g_Logger.WriteLog(\cf5 _T\cf0 (\cf7 "LMDB Init not done !"\cf0 ));\
+		\cf3 message\cf0 .reply(\cf2 status_codes\cf0 ::OK);\
+		\cf4 return\cf0 ;\
+	\}\
+\
+	\cf4 char\cf0  szKey[255];\
+	\cf2 LPSTR\cf0  lpszValue;\
+\
+	strcpy_s(szKey, \cf5 W2A\cf0 (key.c_str()));\
+\
+	\cf4 if\cf0  (lmdb.GetData((\cf2 LPSTR\cf0 )szKey, &lpszValue) == \cf4 true\cf0 )\
+	\{\
+		\cf2 Data\cf0  data;\
+		data.key \cf8 =\cf0  key;\
+		data.value \cf8 =\cf0  std::\cf2 wstring\cf0 ((\cf5 A2W\cf0 (lpszValue)));\
+\
+		free(lpszValue);\
+\
+		\cf2 TCHAR\cf0  sz[255];\
+		\cf5 _stprintf_s\cf0 (sz, \cf5 _T\cf0 (\cf7 "Get Key:%s Value:%s"\cf0 ), data.key.c_str(), data.value.c_str());\
+		g_Logger.WriteLog(sz);\
+\
+		std::\cf2 wstring\cf0  response = data.AsJSON().serialize();\
+		g_Logger.WriteLog(response.c_str());\
+\
+		\cf3 message\cf0 .reply(\cf2 status_codes\cf0 ::OK, data.AsJSON());\
+	\}\
+	\cf4 else\cf0 \
+	\{\
+		\cf3 message\cf0 .reply(\cf2 status_codes\cf0 ::OK);\
+	\}\
+\
+	lmdb.Uninit((\cf2 LPSTR\cf0 )dbName.c_str());\
+\}\
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f1\fs22 \cf0 \
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f0\fs19 \cf4 void\cf0  \cf2 TheServer\cf0 ::RequestVerbSetData(\cf2 http_request\cf0  \cf3 message\cf0 )\
+\{\
+	\cf5 USES_CONVERSION\cf0 ;\
+	\cf2 CLMDBWrapper\cf0  lmdb;\
+	g_Logger.WriteLog(\cf2 Constants\cf0 ::VerbSetData.c_str());\
+\
+	std::\cf2 wstring\cf0  key = \cf2 ServerHelper\cf0 ::FindParameter(\cf3 message\cf0 , \cf5 _T\cf0 (\cf7 "key"\cf0 ));\
+	std::\cf2 wstring\cf0  value = \cf2 ServerHelper\cf0 ::FindParameter(\cf3 message\cf0 , \cf5 _T\cf0 (\cf7 "value"\cf0 ));\
+	std::\cf2 wstring\cf0  dbNameW = \cf2 ServerHelper\cf0 ::FindParameter(\cf3 message\cf0 , \cf5 _T\cf0 (\cf7 "name"\cf0 ));\
+	std::\cf2 string\cf0  dbName(dbNameW.begin(), dbNameW.end());\
+\
+	\cf4 if\cf0  (lmdb.Init((\cf2 LPSTR\cf0 )dbName.c_str()) == \cf4 false\cf0 )\
+	\{\
+		g_Logger.WriteLog(\cf5 _T\cf0 (\cf7 "LMDB Init not done !"\cf0 ));\
+		\cf3 message\cf0 .reply(\cf2 status_codes\cf0 ::OK);\
+		\cf4 return\cf0 ;\
+	\}\
+\
+	\cf2 LPSTR\cf0  lpszKey = \cf5 W2A\cf0 (key.c_str());\
+	\cf2 LPSTR\cf0  lpszValue = \cf5 W2A\cf0 (value.c_str());\
+	lmdb.SetData(lpszKey, lpszValue);\
+\
+	\cf4 char\cf0  sz[255];\
+	sprintf_s(sz, \cf7 "Set Key:%s Value:%s"\cf0 , lpszKey, lpszValue);\
+	g_Logger.WriteLog(\cf5 A2W\cf0 (sz));\
+\
+	\cf2 Data\cf0  data;\
+	data.key \cf8 =\cf0  \cf5 A2W\cf0 (lpszKey);\
+	data.value \cf8 =\cf0  \cf5 A2W\cf0 (lpszValue);\
+\
+	std::\cf2 wstring\cf0  response = data.AsJSON().serialize();\
+	g_Logger.WriteLog(response.c_str());\
+\
+	\cf3 message\cf0 .reply(\cf2 status_codes\cf0 ::OK, data.AsJSON());\
+\
+	lmdb.Uninit((\cf2 LPSTR\cf0 )dbName.c_str());\
+\}\
+\pard\pardeftab708\ri-340\partightenfactor0
+
+\f1\fs22 \cf0 \
+\
+}

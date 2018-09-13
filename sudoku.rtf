@@ -1,0 +1,442 @@
+{\rtf1\ansi\ansicpg1252\cocoartf1561\cocoasubrtf400
+{\fonttbl\f0\fnil\fcharset0 Calibri;\f1\froman\fcharset0 TimesNewRomanPSMT;\f2\fswiss\fcharset0 Helvetica;
+}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;}
+{\*\expandedcolortbl;;\csgenericrgb\c0\c0\c0;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww10800\viewh8400\viewkind0
+\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\partightenfactor0
+
+\f0\i\fs22 \cf2 private boolean isInRow(int row, int number) \{\
+  for (int i = 0; i < SIZE; i++)\
+    if (board[row][i] == number)\
+      return true;\
+\
+  return false;\
+\}\
+\
+private boolean isInCol(int col, int number) \{\
+  for (int i = 0; i < SIZE; i++)\
+    if (board[i][col] == number)\
+      return true;\
+\
+  return false;\
+\
+\
+private boolean isInBox(int row, int col, int number) \{\
+  int r = row - row % BOX;\
+  int c = col - col % BOX;\
+\
+  for (int i = r; i < r + BOX; i++)\
+    for (int j = c; j < c + BOX; j++)\
+      if (board[i][j] == number)\
+        return true;\
+\
+  return false;\
+\}\
+\
+private boolean isOk(int row, int col, int number) \{\
+  return !isInRow(row, number) && \
+         !isInCol(col, number) && \
+      
+\f1   
+\f0  !isInBox(row, col, number);\
+\}\
+public boolean solve() \{\
+  for (int row = 0; row < SIZE; row++) \{\
+    for (int col = 0; col < SIZE; col++) \{\
+      if (board[row][col] == EMPTY) \{\
+        for (int number = 1; number <= SIZE; number++) \{\
+          if (isOk(row, col, number)) \{\
+            board[row][col] = number;\
+          \
+            if (solve()) \{\
+              return true;\
+            \} else \{\
+       
+\f1   
+\f0      board[row][col] = EMPTY;\
+            \}\
+       
+\f1   
+\f0  \}\
+        \}\
+		\
+        r
+\f1 et
+\i0\b u
+\f0\i\b0 rn false;\
+      \}\
+    \}\
+  \}\
+  \
+  return true;\
+\}\
+\
+package com.ssaurel.dlx;\
+\
+import java.util.Arrays;\
+import java.util.List;\
+\
+public class Sudoku \{\
+\
+  // Taille de la grille\
+  private static final int SIZE = 25;\
+  // Taille d'une bo\'eete\
+  private static final int BOX_SIZE = 5;\
+  // Cellule vide valoris\'e9e \'e0 0\
+  private static final int EMPTY_CELL = 0;\
+  // Nombre de contraintes : cellule, ligne, colonne, bo\'eetes\
+  private static final int CONSTRAINTS = 4;\
+  // Plage de valeurs pour chaque cellule\
+  private static final int MIN_VALUE = 1;\
+  private static final int MAX_VALUE = SIZE;\
+  // Index de d\'e9part pour la matrice de couverture\
+  private static final int COVER_START_INDEX = 1;\
+\
+  private int[][] grid;\
+  private int[][] gridSolved;\
+\
+  public Sudoku(int[][] grid) \{\
+    this.grid = new int[SIZE][SIZE];\
+\
+    for (int i = 0; i < SIZE
+\f1 ; i
+\f0 ++)\
+      for (int j = 0; j < SIZE; j++)\
+        this.grid[i][j] = grid[i][j];\
+  \}\
+\
+// ...\
+\
+  // renvoie l'index dans la matrice de couverture\
+  private int indexInCoverMatrix(int row, int
+\f1  co
+\f0 lumn, int num) \{\
+    return (row - 1) * SIZE * SIZE + (column - 1) * SIZE + (num - 1);\
+  \}\
+\
+  // cr\'e9ation de la matrice de couverture \'e0 vide\
+  private int[][] createCoverMatrix() \{\
+    int[][] coverMatrix = new int[SIZE * SIZE * MAX_VALUE][SIZE * SIZE * CONSTRAINTS];\
+\
+    int header = 0;\
+    header = createCellConstraints(coverMatrix, header);\
+    header = createRowConstraints(coverMatrix, header);\
+    header = createColumnConstraints(coverMatrix, header);\
+    createBoxConstraints(coverMatrix, header);\
+\
+    return coverMatrix;\
+  \}\
+\
+  private int createBoxConstraints(int[][] matrix, int header) \{\
+    for (int row = COVER_START_INDEX; row <= SIZE; row += BOX_SIZE) \{\
+      for (int column = COVER_START_INDEX; column <= SIZE; column += BOX_SIZE) \{\
+        for (int n = COVER_START_INDEX; n <= SIZE; n++, header++) \{\
+          for (int rowDelta = 0; rowDelta < BOX_SIZE; rowDelta++) \{\
+            for (int columnDelta = 0; columnDelta < BOX_SIZE; columnDelta++) \{\
+              int index =
+\f1  i
+\f0 ndexInCoverMatrix(row + rowDelta, column + columnDelta, n);\
+              matrix[index][header] = 1;\
+            \}\
+          \}\
+        \}\
+      \}\
+    \}\
+	\
+    return header;\
+  \}\
+\
+  private int createColumnConstraints(int[][] matrix, int header) \{\
+    for (int column = COVER_START_INDEX; column <= SIZE; column++) \{\
+      for (int n = COVER_START_INDEX; n <= SIZE; n++, header++) \{\
+        for (int row = COVER_START_INDEX; row <= SIZE; row++) \{\
+          int index = indexInCoverMatrix(row, column, n);\
+          matrix[index][header] = 1;\
+        \}\
+      \}\
+    \}\
+	\
+    return header;\
+  \}\
+\
+  private int createRowConstraints(int[][] matrix, int header) \{\
+    for (int row = COVER_START_INDEX; row <= SIZE; row++) \{\
+      for (int n = COVER_START_INDEX; n <= SIZE; n++, header++) \{\
+        for (int column = COVER_START_INDEX; column <= SIZE; column++) \{\
+          int index = indexInCoverMatrix(row, column, n);\
+            matrix[index][header] = 1;\
+        \}\
+      \}\
+    \}\
+	\
+    return header;\
+  \}\
+\
+  private int createCellConstraints(int[][] matrix, int header) \{\
+    for (int row = COVER_START_INDEX; row <= SIZE; row++) \{\
+      for (int column = COVER_START_INDEX; column <= SIZE; column++, header++) \{\
+        for (int n = COVER_START_INDEX; n <=
+\f1  SI
+\f0 ZE; n++) \{\
+          int index = indexInCoverMatrix(row, column, n);\
+          matrix[index][header] = 1;\
+        \}\
+      \}\
+    \}\
+\
+    return header;\
+  \}\
+\
+  // conversion en matrice de couverture\
+  private int[][] convertInCoverMatrix(int[][] grid) \{\
+    int[][] coverMatrix = createCoverMatrix();\
+\
+    // prise en compte des valeurs d\'e9j\'e0 renseign\'e9es dans l'instance de grille de Sudoku\
+    for (int row = COVER_START_INDEX; row <= SIZE; row++) \{\
+      for (int column = COVER_START_INDEX; column <= SIZE; column++) \{\
+        int n = grid[row - 1][column - 1];\
+\
+        if (n != EMPTY_CELL) \{\
+         
+\f1  f
+\f0 or (int num = MIN_VALUE; num <= MAX_VALUE; num++) \{\
+          
+\f1   i
+\f0 f (num 
+\f1 !=
+\i0  n
+\f0\i ) \{\
+              Arrays.fill(coverMatrix[indexInCoverMatrix(row, column, num)], 0);\
+            \}\
+          \}\
+        \}\
+      \}\
+    \}\
+\
+    return coverMatrix;\
+  \}\
+\
+// ...\
+\}\
+\
+\
+public class DancingNode \{\
+  public DancingNode left, right, top, bottom;\
+  public ColumnNode column;\
+\
+  public DancingNode() \{\
+    left = right = top = bottom = this;\
+  \}\
+\
+  public DancingNode(ColumnNode c) \{\
+    this();\
+    column = c;\
+  \}\
+\
+  public DancingNode linkDown(DancingNode node) \{\
+    node.bottom = bottom;\
+    node.bottom.top = node;\
+    node.top = this;\
+    bottom = node;\
+    return node;\
+  \}\
+\
+  public DancingNode linkRight(DancingNode node) \{\
+    node.right = right;\
+    node.right.left = node;\
+    node.left = this;\
+    right = node;\
+    return node;\
+  \}\
+\
+  public void removeLeftRight() \{\
+    left.right = right;\
+    right.left = left;\
+  \}\
+\
+  public void reinsertLeftRight() \{\
+    left.right = this;\
+    right.left = this;\
+  \}\
+\
+  public void removeTopBottom() \{\
+    top.bottom = bottom;\
+    bottom.top = top;\
+  \}\
+\
+  public void reinsertTopBottom() \{\
+    top.bottom = this;\
+    bottom.top = this;\
+  \}\
+\}\
+\
+\
+public class ColumnNode extends DancingNode \{\
+\
+  public int size;\
+  public String name;\
+\
+  public ColumnNode(String n) \{\
+    super();\
+    size = 0;\
+    name = n;\
+    column = this;\
+  \}\
+\
+   public void cover() \{\
+     removeLeftRight();\
+\
+     for (DancingNode i = bottom; i != this; i = i.bottom) \{\
+       for (DancingNode j = i.right; j != i; j = j.right) \{\
+         j.remove
+\f1 To
+\f0 pBottom();\
+         j.column.size--
+\f1 ;
+\i0\b \
+ 
+\f0\i\b0       \}\
+     \}\
+  \}\
+\
+  public void uncover() \{\
+    for (DancingNode i = top; i != this; i = i.top) \{\
+      for (DancingNode j = i.left; j != i; j = j.left) \{\
+        j.column.size++;\
+        j.reinsertTopBottom();\
+      \}\
+    \}\
+\
+    reinsertLeftRight();\
+  \}\
+\}\
+\
+\
+public class DLX \{\
+\
+  private ColumnNode header;\
+  private List<DancingNode> answer;\
+  public List<DancingNode> result;\
+\
+  public DLX(int[][] cover) \{\
+    header = createDLXList(cover);\
+  \}\
+\
+  private ColumnNode createDLXList(int[][] grid) \{\
+    final int nbColumns = grid[0].length;\
+    ColumnNode headerNode = new ColumnNode("header");\
+    List<ColumnNode> columnNodes = new ArrayList<>();\
+\
+    for (int i = 0; i < nbColumns; i++) \{\
+      ColumnNode n = new ColumnNode(i + "");\
+      columnNodes.add(n);\
+      headerNode = (ColumnNode) headerNode.linkRight(n);\
+    \}\
+\
+     headerNode = headerNode.right.column;\
+\
+    for (int[] aGrid : grid) \{\
+      DancingNode prev = null;\
+\
+      for (int j = 0; j < nbColumns; j++) \{\
+        if (aGrid[j] == 1) \{\
+          ColumnNode col = columnNodes.get(j);\
+  
+\f1   
+\i0\b   
+\f0\i\b0     DancingNode newNode = new DancingNode(col);\
+\
+          if (prev == null)\
+            prev = newNode;\
+\
+          col.top.linkDown(newNode);\
+          prev = prev.linkRight(newNode);\
+          col.size++;\
+        \}\
+      \}\
+    \}\
+\
+    headerNode.size = nbColumns;\
+\
+    return headerNode;\
+  \}\
+\
+  // ...\
+\}\
+\
+\
+private void process(int k) \{\
+  if (header.right == header) \{\
+    // Fin de l'Algorithme X\
+   // on copie le r\'e9sultat dans une liste result\
+   result = new LinkedList<>(answer);\
+  \} else \{\
+    // s\'e9lection de la colonne c\
+    ColumnNode c = selectColumnNodeHeuristic();\
+    c.cover();\
+\
+    for (DancingNode r = c.bottom; r != c; r = r.bottom) \{\
+      // on ajoute la ligne r dans la solution partielle\
+      answer.add(r);\
+\
+      // on couvre les colonnes\
+      for (DancingNode j = r.right; j != r; j = j.right) \{\
+ 
+\f1     
+\i0\b   
+\f0\i\b0  j.column.cover();\
+      \}\
+\
+      // appel r\'e9cursif au niveau k+1\
+      process(k + 1);\
+\
+      // on revient en arri\'e8re\
+      r = answer.remove(answer.size() - 1);\
+      c = r.column;\
+\
+      // on d\'e9couvre les colonnes\
+      for (DancingNode j = r.left; j != r; j = j.left) \{\
+        j.column.uncover();\
+      \}\
+    \}\
+\
+    c.uncover();\
+  \}\
+\}\
+\
+\
+private int[][] convertDLXListToGrid(List<DancingNode> answer) \{\
+  int[][] result = new int[SIZE][SIZE];\
+\
+  for (DancingNode n : answer) \{\
+    DancingNode rcNode = n;\
+    int min = Integer.parseInt(rcNode.column.name);\
+\
+    for (DancingNode tmp = n.right; tmp != n; tmp = tmp.right) \{\
+      int val = Integer.parseInt(tmp.column.name);\
+\
+      if (val < min) \{\
+        min = val;\
+        rcNode = tmp;
+\f1 \
+
+\i0  
+\f2\fs24 \cf0      \}\
+    \}\
+\
+    // on r\'e9cup\'e8re la ligne et la colonne\
+    int ans1 = Integer.parseInt(rcNode.column.name);\
+    int ans2 = Integer.parseInt(rcNode.right.column.name);\
+    int r = ans1 / SIZE;\
+    int c = ans1 % SIZE;\
+	// puis la valeur affect\'e9e\
+    int num = (ans2 % SIZE) + 1;\
+	// on affecte le tout sur notre grille r\'e9solue\
+    result[r][c] = num;\
+  \}\
+  \
+  return result;\
+\}\
+\
+}
